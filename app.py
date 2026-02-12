@@ -1,29 +1,4 @@
 import os
-import streamlit as st
-
-def load_sample_text(path: str = "sample_input.txt") -> str:
-    if os.path.exists(path):
-        with open(path, "r", encoding="utf-8") as f:
-            return f.read()
-    return ""
-
-# ---- UI: Sample loader ----
-if "raw_text" not in st.session_state:
-    st.session_state.raw_text = ""
-
-col1, col2 = st.columns([1, 5])
-with col1:
-    if st.button("Load sample"):
-        st.session_state.raw_text = load_sample_text()
-
-with col2:
-    st.caption("Tip: Click **Load sample** to demo the app instantly.")
-
-raw_text = st.text_area(
-    "Paste itinerary text",
-    value=st.session_state.raw_text,
-    height=280,
-)
 import re
 import hashlib
 from dataclasses import dataclass
@@ -33,6 +8,16 @@ from typing import List, Optional, Dict, Tuple
 import pandas as pd
 import streamlit as st
 from dateutil.parser import parse as dtparse
+
+
+# -----------------------------
+# Sample loader
+# -----------------------------
+def load_sample_text(path: str = "sample_input.txt") -> str:
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
 
 
 # -----------------------------
@@ -245,7 +230,6 @@ def merge_city_runs(jobs: List[Job]) -> List[Dict]:
             continue
 
         if city_norm == cur["city_norm"]:
-            # extend run
             cur["start_date"] = min(cur["start_date"], j.start_date)
             cur["end_date"] = max(cur["end_date"], j.end_date)
             cur["jobs"].append(j)
@@ -307,7 +291,6 @@ def compute_trip_boundary_travel(
         trip_in_day = r["start_date"] - timedelta(days=1)
         trip_out_day = r["end_date"] + timedelta(days=1)
 
-        # Timed blocks so we avoid bold/all-day entirely
         in_start = datetime.combine(trip_in_day, time(travel_start_hour, 0))
         in_end = datetime.combine(trip_in_day, time(travel_end_hour, 0))
         if in_end <= in_start:
@@ -325,12 +308,24 @@ def compute_trip_boundary_travel(
         uid_out = make_uid(f"TRAVELOUT|{run_id}|{city_norm}->{home_norm}|{trip_out_day.isoformat()}")
 
         travel_events.append(
-            vevent_timed(f"TRAVEL IN: {home_base} → {r['city_label']}", in_start, in_end,
-                         f"{home_base} → {r['city_label']}", desc_in, uid_in)
+            vevent_timed(
+                f"TRAVEL IN: {home_base} → {r['city_label']}",
+                in_start,
+                in_end,
+                f"{home_base} → {r['city_label']}",
+                desc_in,
+                uid_in
+            )
         )
         travel_events.append(
-            vevent_timed(f"TRAVEL OUT: {r['city_label']} → {home_base}", out_start, out_end,
-                         f"{r['city_label']} → {home_base}", desc_out, uid_out)
+            vevent_timed(
+                f"TRAVEL OUT: {r['city_label']} → {home_base}",
+                out_start,
+                out_end,
+                f"{r['city_label']} → {home_base}",
+                desc_out,
+                uid_out
+            )
         )
 
     return travel_events, warnings
@@ -340,7 +335,6 @@ def compute_trip_boundary_travel(
 # Event builders
 # -----------------------------
 def build_work_events(jobs: List[Job], default_start: int, default_end: int, run_id: str) -> List[str]:
-    # Keep work timed (even multi-day: one per day) to avoid boldness.
     events = []
     for j in jobs:
         if j.kind != "WORK":
@@ -364,7 +358,6 @@ def build_work_events(jobs: List[Job], default_start: int, default_end: int, run
     return events
 
 def build_hold_events(jobs: List[Job], hold_start: int, hold_end: int, run_id: str) -> List[str]:
-    # HOLD timed per day (not bold).
     events = []
     for j in jobs:
         if j.kind != "HOLD":
@@ -388,12 +381,25 @@ def build_hold_events(jobs: List[Job], hold_start: int, hold_end: int, run_id: s
 # -----------------------------
 st.set_page_config(page_title="Itinerary Calendar Builder (V4)", page_icon="🗓️", layout="wide")
 st.title("🗓️ Itinerary Calendar Builder (V4)")
-st.caption("Travel is only created at trip boundaries: 1 travel-in day before first job, 1 travel-out day after last job, only for non-home cities. No between-job travel in same city.")
+st.caption(
+    "Travel is only created at trip boundaries: 1 travel-in day before first job, 1 travel-out day after last job, "
+    "only for non-home cities. No between-job travel in same city."
+)
+
+# Session state init
+if "jobs" not in st.session_state:
+    st.session_state.jobs = []
+if "raw_input" not in st.session_state:
+    st.session_state.raw_input = ""
 
 with st.sidebar:
     st.header("Batch Tag (Run ID)")
     default_run = datetime.now().strftime("%Y-%m-%d") + "-001"
-    run_id = st.text_input("Run ID", value=default_run, help="Added to every event description: search RunID in Google Calendar to bulk delete.")
+    run_id = st.text_input(
+        "Run ID",
+        value=default_run,
+        help="Added to every event description: search RunID in Google Calendar to bulk delete."
+    )
 
     st.divider()
     st.header("Base + Defaults")
@@ -409,17 +415,35 @@ with st.sidebar:
 
     st.divider()
     st.subheader("Travel settings")
-    travel_mode = st.selectbox("Travel generation", ["AUTO", "MANUAL", "OFF"], index=0,
-                               help="AUTO = always generate boundary travel. MANUAL = only generate travel for runs where include_travel is enabled. OFF = no travel.")
+    travel_mode = st.selectbox(
+        "Travel generation",
+        ["AUTO", "MANUAL", "OFF"],
+        index=0,
+        help="AUTO = always generate boundary travel. MANUAL = only generate travel for runs where include_travel is enabled. OFF = no travel."
+    )
     travel_start_hour = st.number_input("Travel block start hour", 0, 23, 8, 1)
     travel_end_hour = st.number_input("Travel block end hour", 0, 23, 12, 1)
 
 st.subheader("Paste your agency text")
-raw = st.text_area("Paste the full block from your agency here…", height=300)
-parse_btn = st.button("Parse jobs", type="primary")
 
-if "jobs" not in st.session_state:
-    st.session_state.jobs = []
+# Sample loader row
+c_load, c_note = st.columns([1, 5])
+with c_load:
+    if st.button("Load sample"):
+        st.session_state.raw_input = load_sample_text("sample_input.txt")
+with c_note:
+    st.caption("Tip: Click **Load sample** to demo the app instantly.")
+
+raw = st.text_area(
+    "Paste the full block from your agency here…",
+    height=300,
+    value=st.session_state.raw_input
+)
+
+# Keep session in sync (so edits persist after reruns)
+st.session_state.raw_input = raw
+
+parse_btn = st.button("Parse jobs", type="primary")
 
 if parse_btn:
     st.session_state.jobs = parse_jobs(raw)
@@ -427,7 +451,7 @@ if parse_btn:
 jobs: List[Job] = st.session_state.jobs
 
 if not jobs:
-    st.info("Paste text and click **Parse jobs**.")
+    st.info("Paste text (or click **Load sample**) and click **Parse jobs**.")
     st.stop()
 
 st.subheader("Review / edit jobs")
@@ -490,7 +514,11 @@ travel_events, travel_warnings = compute_trip_boundary_travel(
 
 st.subheader("Travel summary")
 runs = merge_city_runs(jobs)
-trip_runs = [r for r in runs if normalize_location(r["city_label"]) != normalize_location(home_base) and not is_unknown_location(r["city_label"])]
+trip_runs = [
+    r for r in runs
+    if normalize_location(r["city_label"]) != normalize_location(home_base)
+    and not is_unknown_location(r["city_label"])
+]
 st.write(f"Detected city runs: {len(runs)}  •  Non-home runs (eligible for travel): {len(trip_runs)}")
 if travel_mode == "MANUAL":
     st.caption("MANUAL: a run gets travel only if at least one job in that run has include_travel checked.")
@@ -504,13 +532,31 @@ travel_ics = ics_wrap(travel_events, "TRAVEL (Itinerary)")
 
 c1, c2, c3 = st.columns(3)
 with c1:
-    st.download_button("Download work.ics", work_ics.encode("utf-8"), "work.ics", "text/calendar", use_container_width=True)
+    st.download_button(
+        "Download work.ics",
+        work_ics.encode("utf-8"),
+        "work.ics",
+        "text/calendar",
+        use_container_width=True
+    )
     st.caption(f"Events: {len(work_events)}")
 with c2:
-    st.download_button("Download travel.ics", travel_ics.encode("utf-8"), "travel.ics", "text/calendar", use_container_width=True)
+    st.download_button(
+        "Download travel.ics",
+        travel_ics.encode("utf-8"),
+        "travel.ics",
+        "text/calendar",
+        use_container_width=True
+    )
     st.caption(f"Events: {len(travel_events)}")
 with c3:
-    st.download_button("Download hold.ics", hold_ics.encode("utf-8"), "hold.ics", "text/calendar", use_container_width=True)
+    st.download_button(
+        "Download hold.ics",
+        hold_ics.encode("utf-8"),
+        "hold.ics",
+        "text/calendar",
+        use_container_width=True
+    )
     st.caption(f"Events: {len(hold_events)}")
 
 st.subheader("Import tips (Google Calendar)")
@@ -522,4 +568,3 @@ st.markdown(
 **Bulk delete:** search `RunID: <your-id>` in Google Calendar and delete that batch.
 """
 )
-
