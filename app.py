@@ -567,11 +567,5 @@ st.markdown(
 
 **Bulk delete:** search `RunID: <your-id>` in Google Calendar and delete that batch.
 """
-with st.expander("Cleanup / Delete a RunID batch"):
-    st.markdown(
-        """
-1. In Google Calendar, search: `RunID: <your-id>`
-2. Select the events from that batch and delete them.
-        """
     )
 
