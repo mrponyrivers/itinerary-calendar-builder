@@ -11,3 +11,10 @@ Each export is tagged with a RunID so you can bulk-delete imported events later.
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
+## Screenshots
+
+### Paste and parse
+![Input screen](assets/input.png)
+
+### Download calendars
+![Output screen](assets/output.png)
