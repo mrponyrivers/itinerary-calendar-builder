@@ -1,4 +1,5 @@
 # Itinerary Calendar Builder
+**Live Demo:** https://mrponyrivers-itinerary-calendar-builder.streamlit.app/
 
 A Streamlit app that parses itinerary text into calendar events and exports three ICS files:
 - WORK
