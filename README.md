@@ -7,18 +7,11 @@ A Streamlit app that parses itinerary text into calendar events and exports thre
 
 Each export is tagged with a RunID so you can bulk-delete imported events later.
 
-## Run locally## Screenshots
 ## Run locally
-```bash
-pip install -r requirements.txt
-streamlit run app.py
-
-### Paste and parse
-<img src="assets/input1.png" width="800" />
-<img src="assets/input2.png" width="800" />
-<img src="assets/input3.png" width="800" />
 
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
-```
+Screenshots
+Paste and parse
+<img src="assets/input1.png" width="800" /> <img src="assets/input2.png" width="800" /> <img src="assets/input3.png" width="800" /> ```
