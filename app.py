@@ -1,3 +1,29 @@
+import os
+import streamlit as st
+
+def load_sample_text(path: str = "sample_input.txt") -> str:
+    if os.path.exists(path):
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read()
+    return ""
+
+# ---- UI: Sample loader ----
+if "raw_text" not in st.session_state:
+    st.session_state.raw_text = ""
+
+col1, col2 = st.columns([1, 5])
+with col1:
+    if st.button("Load sample"):
+        st.session_state.raw_text = load_sample_text()
+
+with col2:
+    st.caption("Tip: Click **Load sample** to demo the app instantly.")
+
+raw_text = st.text_area(
+    "Paste itinerary text",
+    value=st.session_state.raw_text,
+    height=280,
+)
 import re
 import hashlib
 from dataclasses import dataclass
