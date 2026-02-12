@@ -14,7 +14,9 @@ streamlit run app.py
 ## Screenshots
 
 ### Paste and parse
-![Input screen](assets/input.png)
+![Input screen](assets/input1.png)
+![Input screen](assets/input2.png)
+![Input screen](assets/input3.png)
 
 ### Download calendars
 ![Output screen](assets/output.png)
