@@ -1,3 +1,9 @@
 streamlit==1.50.0
+<<<<<<< HEAD
 pandas>=2.0
 python-dateutil>=2.9
+=======
+pandas==2.3.3
+python-dateutil==2.9.0.post0
+
+>>>>>>> f5f390d (Simplify requirements)
