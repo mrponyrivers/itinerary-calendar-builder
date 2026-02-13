@@ -1,6 +1,12 @@
 # Itinerary Calendar Builder
 
-**Live Demo:** https://mrponyrivers-itinerary-calendar-builder.streamlit.app/
+<p>
+  <a href="https://mrponyrivers-itinerary-calendar-builder.streamlit.app/"><b>Live Demo</b></a> •
+  <a href="https://github.com/mrponyrivers/itinerary-calendar-builder"><b>Repo</b></a>
+</p>
+
+<img src="assets/demo.gif" width="900" alt="Itinerary Calendar Builder demo" />
+
 
 A Streamlit app that converts messy itinerary text into clean calendar events and exports **three ICS files**:
 - **WORK**
